@@ -6,8 +6,9 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function Perfil() {
-  const [user, setUser] = useState("");
+export default function Atualizar() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -30,7 +31,8 @@ export default function Perfil() {
         headers: { Authorization: `Bearer ${token}` }
       })
 
-      setUser(res.data.user)
+      setUsername(res.data.user.nome)
+      setEmail(res.data.user.email)
 
     } catch (error) {
       console.log("ERRO:", error)
@@ -40,10 +42,31 @@ export default function Perfil() {
   }
 
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("@token");
-    setUser("");
-    alert("Logout realizado!");
+  const handleUpdate = async () => {
+    try {
+      const token = await AsyncStorage.getItem("@token")
+
+      if (!token) {
+        alert("Erro, você não esta logado")
+        setLoading(false)
+        return;
+      }
+
+      const res = await axios.get("http://localhost:3001/auth/update", {
+        nome: username, email
+      }, {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      }
+      )
+
+      console.log(res.data)
+    } catch (error) {
+
+    } finally {
+      setLoading(false)
+    }
+
   }
 
 
@@ -52,11 +75,22 @@ export default function Perfil() {
     <View style={styles.container}>
       <Text style={styles.title}>Meu perfil</Text>
 
-      <Text>Nome: {user.nome}</Text>
-      <Text>Email: {user.email}</Text>
+      <TextInput
+        style={styles.input}
+        value={username}
+        onChangeText={setUsername}
+      />
 
-      <TouchableOpacity style={styles.btn} onPress={handleLogout}>
-        <Text>Logout</Text>
+      <TextInput
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType='email-addres'
+      />
+
+
+      <TouchableOpacity style={styles.btn} onPress={handleUpdate}>
+        <Text>Atualizar</Text>
       </TouchableOpacity>
       <StatusBar style="auto" />
     </View>

@@ -158,6 +158,22 @@ app.put("/auth/update", autenticarToken, async (req, res) => {
 
 });
 
+//Rota: DELETE
+app.delete("/auth/delete", autenticarToken, async (req, res) => {
+  try {
+    console.log(req.user.id)
+    await pool.query(
+      "DELETE FROM users WHERE id = ?", [req.user.id]
+    )
+
+    res.json({ message: " Conta deletada com sucesso!" })
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Erro ao Deletar usuário!" })
+  }
+
+});
+
 async function conexaoBd() {
   try {
     const conn = await pool.getConnection();

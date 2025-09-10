@@ -6,13 +6,10 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function Perfil() {
-  const [user, setUser] = useState("");
+export default function Delete() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [user])
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -30,7 +27,8 @@ export default function Perfil() {
         headers: { Authorization: `Bearer ${token}` }
       })
 
-      setUser(res.data.user)
+      setUsername(res.data.user.nome)
+      setEmail(res.data.user.email)
 
     } catch (error) {
       console.log("ERRO:", error)
@@ -40,10 +38,29 @@ export default function Perfil() {
   }
 
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("@token");
-    setUser("");
-    alert("Logout realizado!");
+  const handleDelete = async () => {
+    try {
+      const token = await AsyncStorage.getItem("@token")
+
+      if (!token) {
+        alert("Erro, você não esta logado")
+        setLoading(false)
+        return;
+      }
+
+      const res = await axios.delete("http://localhost:3001/auth/delete", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      console.log(res.data)
+    } catch (error) {
+
+    } finally {
+      setLoading(false)
+    }
+
   }
 
 
@@ -52,11 +69,8 @@ export default function Perfil() {
     <View style={styles.container}>
       <Text style={styles.title}>Meu perfil</Text>
 
-      <Text>Nome: {user.nome}</Text>
-      <Text>Email: {user.email}</Text>
-
-      <TouchableOpacity style={styles.btn} onPress={handleLogout}>
-        <Text>Logout</Text>
+      <TouchableOpacity style={styles.btn} onPress={handleDelete}>
+        <Text>Deletar</Text>
       </TouchableOpacity>
       <StatusBar style="auto" />
     </View>
