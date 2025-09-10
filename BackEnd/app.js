@@ -8,6 +8,8 @@ const dotenv = require("dotenv");
 
 const mysql = require("mysql2/promise");
 
+const jwt = require("jsonwebtoken")
+
 const bcrypt = require("bcrypt");
 
 
@@ -95,7 +97,7 @@ app.post("/auth/login", async (req, res) => {
 
     const usuario = rows[0];
 
-    const senhaValida = await bcrypt.compare(senha, usuario.password);
+    const senhaValida = await bcrypt.compare(senha, usuario.senha);
     if (!senhaValida) {
       return res.status(401).json({ error: "Senha incorreta" })
     }
@@ -110,22 +112,23 @@ app.post("/auth/login", async (req, res) => {
 
 
   } catch (error) {
-    console.log(err);
+    console.log(error);
     res.status(500).json({ error: "Error ao fazer login!" })
   }
 })
 
 // Rota: PERFIL
-app.get("/auth/login", async (req, res) => {
+app.get("/auth/profile", autenticarToken, async (req, res) => {
 
   try {
+    console.log(req.user)
     const [rows] = await pool.query("SELECT nome, email FROM users WHERE id = ?", [req.user.id])
 
     if (rows.length === 0) {
       return res.status(404).json({ error: "Usuário não encontrado. " })
     }
 
-    res.status(200).json({ user: rows[0] });
+    res.json({ user: rows[0] });
 
   } catch (error) {
     console.log(error);
@@ -134,7 +137,7 @@ app.get("/auth/login", async (req, res) => {
 })
 
 //Rota: ATUALIZAR
-app.put("/auth/update", async (req, res) => {
+app.put("/auth/update", autenticarToken, async (req, res) => {
 
   try {
     const { nome, email } = req.body;
